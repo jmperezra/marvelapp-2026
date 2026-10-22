@@ -6,4 +6,5 @@ class GetSuperHeroesUseCase(private val superHeroRepository: SuperHeroRepository
         return superHeroRepository.getAll()
     }
 
+
 }
