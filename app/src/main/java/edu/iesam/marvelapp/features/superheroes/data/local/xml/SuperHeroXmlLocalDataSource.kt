@@ -2,6 +2,7 @@ package edu.iesam.marvelapp.features.superheroes.data.local.xml
 
 import android.content.Context
 import edu.iesam.marvelapp.R
+import edu.iesam.marvelapp.core.cache.AppCache
 import edu.iesam.marvelapp.core.serialization.JsonSerializer
 import edu.iesam.marvelapp.features.superheroes.domain.SuperHero
 
@@ -11,10 +12,12 @@ import edu.iesam.marvelapp.features.superheroes.domain.SuperHero
  */
 class SuperHeroXmlLocalDataSource(
     private val context: Context,
-    private val serializer: JsonSerializer<List<SuperHero>>
+    private val serializer: JsonSerializer<List<SuperHero>>,
+    private val appCache: AppCache
 ) {
 
     private val keySuperHero: String = "superhero"
+    private val ttl: Long = 5 * 60 * 1000
 
     //-- Me creo la fuente de datos xml: SharedPreferences.
     val sharedPref = context.getSharedPreferences(
@@ -30,12 +33,15 @@ class SuperHeroXmlLocalDataSource(
             putString(keySuperHero, serializer.toJson(superHeroes))
             apply()
         }
+        appCache.updateTime(keySuperHero)
     }
 
     fun findAll(): List<SuperHero> {
-        val jsonList: String? = sharedPref.getString(keySuperHero, null)
-        jsonList?.let {
-            return serializer.fromJson(it)
+        if (!appCache.isExpired(keySuperHero, ttl)) {
+            val jsonList: String? = sharedPref.getString(keySuperHero, null)
+            jsonList?.let {
+                return serializer.fromJson(it)
+            }
         }
         return emptyList()
     }
